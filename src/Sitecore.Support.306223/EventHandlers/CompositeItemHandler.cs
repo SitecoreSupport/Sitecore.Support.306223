@@ -10,7 +10,7 @@ using Sitecore.XA.Foundation.Grid;
 using Sitecore.XA.Foundation.Presentation.Layout;
 using Sitecore.XA.Foundation.SitecoreExtensions.Extensions;
 
-namespace Sitecore.XA.Feature.Composites.EventHandlers
+namespace Sitecore.Support.XA.Feature.Composites.EventHandlers
 {
     [UsedImplicitly]
     public class CompositeItemHandler
@@ -23,14 +23,26 @@ namespace Sitecore.XA.Feature.Composites.EventHandlers
         }
 
         [UsedImplicitly]
+        public void OnItemCopied(object sender, EventArgs args)
+        {
+            var item = (Item)Event.ExtractParameter(args, 1);
+            HandleCompositeItem(item);
+        }
+
+        [UsedImplicitly]
         protected void OnItemAdded(object sender, EventArgs args)
         {
             var item = (Item)Event.ExtractParameter(args, 0);
-            if (item.InheritsFrom(Templates.CompositeGroup.ID))
+            HandleCompositeItem(item);
+        }
+
+        protected virtual void HandleCompositeItem(Item item)
+        {
+            if (item.InheritsFrom(Sitecore.XA.Feature.Composites.Templates.CompositeGroup.ID))
             {
-                item.ChildrenInheritingFrom(Templates.CompositeSection.ID).Each(ProcessCompositeItem);
+                item.ChildrenInheritingFrom(Sitecore.XA.Feature.Composites.Templates.CompositeSection.ID).Each(ProcessCompositeItem);
             }
-            else if (item.InheritsFrom(Templates.CompositeSection.ID))
+            else if (item.InheritsFrom(Sitecore.XA.Feature.Composites.Templates.CompositeSection.ID))
             {
                 ProcessCompositeItem(item);
             }
@@ -46,14 +58,14 @@ namespace Sitecore.XA.Feature.Composites.EventHandlers
                 string defaultParameters = null;
                 if (gridDefinitionItem != null)
                 {
-                    defaultParameters = gridDefinitionItem[Foundation.Grid.Templates.GridDefinition.Fields.DefaultGridParameters];
+                    defaultParameters = gridDefinitionItem[Sitecore.XA.Foundation.Grid.Templates.GridDefinition.Fields.DefaultGridParameters];
                 }
                 foreach (var rendering in device.Renderings.RenderingsCollection)
                 {
                     rendering.UniqueId = new ID(Guid.NewGuid());
                     if (defaultParameters != null)
                     {
-                        rendering.Parameters[Foundation.Grid.Constants.GridParametersFieldName] = defaultParameters;
+                        rendering.Parameters[Sitecore.XA.Foundation.Grid.Constants.GridParametersFieldName] = defaultParameters;
                     }
                 }
             }
@@ -80,7 +92,7 @@ namespace Sitecore.XA.Feature.Composites.EventHandlers
         {
             var editAllVersions = Registry.GetString(ExperienceEditor.Constants.RegistryKeys.EditAllVersions);
             var finalLayoutValue = item.Fields[FieldIDs.FinalLayoutField].Value;
-            return editAllVersions == "on" || finalLayoutValue.IsNullOrEmpty();
+            return editAllVersions.Equals("on", StringComparison.OrdinalIgnoreCase) || finalLayoutValue.IsNullOrEmpty();
         }
     }
 }
